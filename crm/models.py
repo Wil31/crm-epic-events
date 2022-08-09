@@ -13,10 +13,10 @@ class Client(models.Model):
         ACTUAL = "ACT"
 
     email = models.EmailField("email address", unique=True)
-    first_name = models.CharField(max_length=25, null=True)
+    first_name = models.CharField(max_length=25, blank=True)
     last_name = models.CharField(max_length=25)
-    phone = models.CharField(max_length=20, null=True)
-    mobile = models.CharField(max_length=20, null=True)
+    phone = models.CharField(max_length=20, blank=True)
+    mobile = models.CharField(max_length=20, blank=True)
     company_name = models.CharField(max_length=250)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
@@ -24,13 +24,16 @@ class Client(models.Model):
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT
     )
     client_status = models.CharField(choices=ClientStatus.choices, max_length=3)
+    
+    def __str__(self):
+        return self.email
 
 
 class Contract(models.Model):
     client = models.ForeignKey(to=Client, on_delete=models.PROTECT)
     status = models.BooleanField(default=True)
-    amount = models.FloatField(validators=[MinValueValidator(0)], null=True)
-    payment_due = models.DateTimeField(null=True)
+    amount = models.FloatField(validators=[MinValueValidator(0)], null=True, blank=True)
+    payment_due = models.DateTimeField(null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
 
@@ -46,8 +49,8 @@ class Event(models.Model):
     support_contact = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT
     )
-    attendees = models.PositiveIntegerField(null=True)
-    event_date = models.DateTimeField(null=True)
-    notes = models.TextField(null=True)
+    attendees = models.PositiveIntegerField(null=True, blank=True)
+    event_date = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
