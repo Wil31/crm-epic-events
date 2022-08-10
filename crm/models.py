@@ -3,10 +3,6 @@ from django.db import models
 from django.core.validators import MinValueValidator
 
 
-# class ClientStatus(models.Model):
-#     status = models.CharField(max_length=25, unique=True, default="Potential")
-
-
 class Client(models.Model):
     class ClientStatus(models.TextChoices):
         POTENTIAL = "PTN"
@@ -24,7 +20,7 @@ class Client(models.Model):
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT
     )
     client_status = models.CharField(choices=ClientStatus.choices, max_length=3)
-    
+
     def __str__(self):
         return self.email
 
@@ -36,6 +32,9 @@ class Contract(models.Model):
     payment_due = models.DateTimeField(null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.client} - Contract ID: {self.id}"
 
 
 class Event(models.Model):
@@ -54,3 +53,6 @@ class Event(models.Model):
     notes = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.client} - Event ID: {self.id}"
