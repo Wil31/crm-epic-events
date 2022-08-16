@@ -15,13 +15,15 @@ class ClientViewset(ModelViewSet):
         return Client.objects.filter(sales_contact=current_user)
 
 
-class ContractViewset(ReadOnlyModelViewSet):
+class ContractViewset(ModelViewSet):
 
     serializer_class = ContractSerializer
-    permission_classes = []
+    permission_classes = [IsSalesAuthenticated]
 
     def get_queryset(self):
-        return Contract.objects.all()
+        current_user = self.request.user
+        clients = Client.objects.filter(sales_contact=current_user)
+        return Contract.objects.filter(client__in=clients)
 
 
 class EventViewset(ReadOnlyModelViewSet):
