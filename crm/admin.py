@@ -4,7 +4,7 @@ from .models import Client, Contract, Event
 
 
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ("email", "first_name", "sales_contact", "client_status")
+    list_display = ("id", "email", "first_name", "sales_contact", "client_status")
     list_filter = ("email", "first_name", "sales_contact", "client_status")
 
 

@@ -8,10 +8,11 @@ from .permissions import IsSalesAuthenticated
 class ClientViewset(ModelViewSet):
 
     serializer_class = ClientSerializer
-    permission_classes = []
+    permission_classes = [IsSalesAuthenticated]
 
     def get_queryset(self):
-        return Client.objects.all()
+        current_user = self.request.user
+        return Client.objects.filter(sales_contact=current_user)
 
 
 class ContractViewset(ReadOnlyModelViewSet):
