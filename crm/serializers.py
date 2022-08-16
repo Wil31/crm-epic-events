@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
@@ -22,6 +23,24 @@ class ClientSerializer(ModelSerializer):
             "date_created",
             "date_updated",
         ]
+
+    def create(self, validated_data):
+        User = get_user_model()
+        sales_email = self.context["request"].POST.get("sales_contact", "[]")
+        sales_contact_obj = User.objects.get(email=sales_email)
+
+        client = Client.objects.create(
+            email=validated_data["email"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            phone=validated_data["phone"],
+            mobile=validated_data["mobile"],
+            company_name=validated_data["company_name"],
+            sales_contact=sales_contact_obj,
+            client_status=validated_data["client_status"],
+        )
+        client.save()
+        return client
 
 
 class ContractSerializer(ModelSerializer):
