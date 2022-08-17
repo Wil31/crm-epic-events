@@ -1,20 +1,32 @@
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
+from http import client
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
-from .permissions import IsSalesAuthenticated
+from .permissions import IsSalesContactOfClient
 
 
 class ClientViewset(ModelViewSet):
 
     serializer_class = ClientSerializer
-    permission_classes = [IsSalesAuthenticated]
+    permission_classes = [IsAuthenticated, IsSalesContactOfClient]
 
     def get_queryset(self):
         current_user = self.request.user
-        return Client.objects.filter(sales_contact=current_user)
+        if current_user.user_type == "MNG":
+            return Client.objects.all()
+        elif current_user.user_type == "SLS":
+            return Client.objects.filter(sales_contact=current_user)
+        elif current_user.user_type == "SPP":
+            events = Event.objects.filter(support_contact=current_user)
+            clients = []
+            for event in events:
+                clients.append(event.client)
+            clients = list(dict.fromkeys(clients))
+            return clients
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -28,7 +40,7 @@ class ClientViewset(ModelViewSet):
 class ContractViewset(ModelViewSet):
 
     serializer_class = ContractSerializer
-    permission_classes = [IsSalesAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         current_user = self.request.user
@@ -47,12 +59,17 @@ class ContractViewset(ModelViewSet):
 class EventViewset(ModelViewSet):
 
     serializer_class = EventSerializer
-    permission_classes = [IsSalesAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         current_user = self.request.user
-        clients = Client.objects.filter(sales_contact=current_user)
-        return Event.objects.filter(client__in=clients)
+        if current_user.user_type == "MNG":
+            return Event.objects.all()
+        elif current_user.user_type == "SLS":
+            clients = Client.objects.filter(sales_contact=current_user)
+            return Event.objects.filter(client__in=clients)
+        elif current_user.user_type == "SPP":
+            return Event.objects.filter(support_contact=current_user)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
