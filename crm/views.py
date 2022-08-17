@@ -44,13 +44,15 @@ class ContractViewset(ModelViewSet):
         )
 
 
-class EventViewset(ReadOnlyModelViewSet):
+class EventViewset(ModelViewSet):
 
     serializer_class = EventSerializer
-    permission_classes = []
+    permission_classes = [IsSalesAuthenticated]
 
     def get_queryset(self):
-        return Event.objects.all()
+        current_user = self.request.user
+        clients = Client.objects.filter(sales_contact=current_user)
+        return Event.objects.filter(client__in=clients)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
