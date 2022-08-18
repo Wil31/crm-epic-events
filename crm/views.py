@@ -1,4 +1,4 @@
-from http import client
+from datetime import datetime
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -21,18 +21,16 @@ class ClientViewset(ModelViewSet):
         elif current_user.user_type == "SLS":
             queryset = Client.objects.filter(sales_contact=current_user)
         elif current_user.user_type == "SPP":
-            events = Event.objects.filter(support_contact=current_user)
-            clients = []
-            for event in events:
-                clients.append(event.client)
-            queryset = list(dict.fromkeys(clients))
-        
-        last_name = self.request.GET.get('last_name')
+            queryset = Client.objects.filter(
+                event__support_contact=current_user
+            ).distinct()
+
+        last_name = self.request.GET.get("last_name")
         if last_name is not None and last_name is not "":
-            queryset = queryset.filter(last_name=last_name)
-        email = self.request.GET.get('email')
+            queryset = queryset.filter(last_name__icontains=last_name)
+        email = self.request.GET.get("email")
         if email is not None and email is not "":
-            queryset = queryset.filter(email=email)
+            queryset = queryset.filter(email__icontains=email)
         return queryset
 
     def destroy(self, request, *args, **kwargs):
@@ -52,10 +50,28 @@ class ContractViewset(ModelViewSet):
     def get_queryset(self):
         current_user = self.request.user
         if current_user.user_type == "MNG":
-            return Contract.objects.all()
+            queryset = Contract.objects.all()
         else:
             clients = Client.objects.filter(sales_contact=current_user)
-            return Contract.objects.filter(client__in=clients)
+            queryset = Contract.objects.filter(client__in=clients)
+
+        last_name = self.request.GET.get("last_name")
+        if last_name is not None and last_name is not "":
+            queryset = queryset.filter(client__last_name__icontains=last_name)
+
+        email = self.request.GET.get("email")
+        if email is not None and email is not "":
+            queryset = queryset.filter(client__email__icontains=email)
+
+        date_created = self.request.GET.get("date_created")
+        if date_created is not None and date_created is not "":
+            date_obj = datetime.strptime(date_created, "%d/%m/%Y")
+            queryset = queryset.filter(date_created__date=date_obj)
+
+        amount = self.request.GET.get("amount")
+        if amount is not None and amount is not "":
+            queryset = queryset.filter(amount=amount)
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
