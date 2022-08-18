@@ -1,4 +1,6 @@
+from xml.dom import ValidationErr
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
@@ -24,11 +26,29 @@ class ClientSerializer(ModelSerializer):
             "date_updated",
         ]
 
+    def validate(self, data):
+        """Check if user_type is sales"""
+        user = self.context.get("request", None).user
+        if user.user_type != "SLS":
+            error_message = f"Only the Sales user can do this action"
+            raise serializers.ValidationError(error_message)
+        """Check if sales_contact is provided"""
+        User = get_user_model()
+        sales_email = self.context["request"].POST.get("sales_contact", "[]")
+        if sales_email == "":
+            error_message = f"Sales contact email is required"
+            raise serializers.ValidationError(error_message)
+        """Check if sales_contact is a sales user"""
+        sales_contact = get_object_or_404(User, email=sales_email)
+        if sales_contact.user_type != "SLS":
+            error_message = f"'Sales email' should be a sales user"
+            raise serializers.ValidationError(error_message)
+        return super().validate(data)
+
     def create(self, validated_data):
         User = get_user_model()
         sales_email = self.context["request"].POST.get("sales_contact", "[]")
-        sales_contact_obj = User.objects.get(email=sales_email)
-
+        sales_contact = get_object_or_404(User, email=sales_email)
         client = Client.objects.create(
             email=validated_data["email"],
             first_name=validated_data["first_name"],
@@ -36,7 +56,7 @@ class ClientSerializer(ModelSerializer):
             phone=validated_data["phone"],
             mobile=validated_data["mobile"],
             company_name=validated_data["company_name"],
-            sales_contact=sales_contact_obj,
+            sales_contact=sales_contact,
             client_status=validated_data["client_status"],
         )
         client.save()
