@@ -81,16 +81,16 @@ class ContractSerializer(ModelSerializer):
     def create(self, validated_data):
         current_user = self.context.get("request", None).user
         client_email = self.context["request"].POST.get("client", "[]")
-        client_email_obj = Client.objects.get(email=client_email)
+        client_obj = get_object_or_404(Client, email=client_email)
         clients = Client.objects.filter(sales_contact=current_user)
 
-        if client_email_obj not in clients:
+        if client_obj not in clients:
             raise serializers.ValidationError(
                 "Cannot create contract for this client. (Wrong sales user)"
             )
 
         contract = Contract.objects.create(
-            client=client_email_obj,
+            client=client_obj,
             status=validated_data["status"],
             amount=validated_data["amount"],
             payment_due=validated_data["payment_due"],

@@ -6,7 +6,7 @@ from rest_framework import status
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
-from .permissions import IsSalesContactOrReadOnly
+from .permissions import IsSalesContactOrReadOnly, IsSalesOrManagerUser
 
 
 class ClientViewset(ModelViewSet):
@@ -40,12 +40,15 @@ class ClientViewset(ModelViewSet):
 class ContractViewset(ModelViewSet):
 
     serializer_class = ContractSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSalesOrManagerUser]
 
     def get_queryset(self):
         current_user = self.request.user
-        clients = Client.objects.filter(sales_contact=current_user)
-        return Contract.objects.filter(client__in=clients)
+        if current_user.user_type == "MNG":
+            return Contract.objects.all()
+        else:
+            clients = Client.objects.filter(sales_contact=current_user)
+            return Contract.objects.filter(client__in=clients)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

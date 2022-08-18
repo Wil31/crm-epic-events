@@ -10,3 +10,16 @@ class IsSalesContactOrReadOnly(permissions.BasePermission):
         if obj.sales_contact == request.user:
             return True
         return False
+
+
+class IsSalesOrManagerUser(permissions.BasePermission):
+    message = "Only the Sales user can do this action"
+
+    def has_permission(
+        self,
+        request,
+        view,
+    ):
+        if request.user.user_type in ("SLS", "MNG"):
+            return True
+        return False
