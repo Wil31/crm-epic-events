@@ -17,16 +17,23 @@ class ClientViewset(ModelViewSet):
     def get_queryset(self):
         current_user = self.request.user
         if current_user.user_type == "MNG":
-            return Client.objects.all()
+            queryset = Client.objects.all()
         elif current_user.user_type == "SLS":
-            return Client.objects.filter(sales_contact=current_user)
+            queryset = Client.objects.filter(sales_contact=current_user)
         elif current_user.user_type == "SPP":
             events = Event.objects.filter(support_contact=current_user)
             clients = []
             for event in events:
                 clients.append(event.client)
-            clients = list(dict.fromkeys(clients))
-            return clients
+            queryset = list(dict.fromkeys(clients))
+        
+        last_name = self.request.GET.get('last_name')
+        if last_name is not None and last_name is not "":
+            queryset = queryset.filter(last_name=last_name)
+        email = self.request.GET.get('email')
+        if email is not None and email is not "":
+            queryset = queryset.filter(email=email)
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
