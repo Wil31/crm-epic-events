@@ -90,12 +90,26 @@ class EventViewset(ModelViewSet):
     def get_queryset(self):
         current_user = self.request.user
         if current_user.user_type == "MNG":
-            return Event.objects.all()
+            queryset = Event.objects.all()
         elif current_user.user_type == "SLS":
-            clients = Client.objects.filter(sales_contact=current_user)
-            return Event.objects.filter(client__in=clients)
+            queryset = Event.objects.filter(client__sales_contact=current_user)
         elif current_user.user_type == "SPP":
-            return Event.objects.filter(support_contact=current_user)
+            queryset = Event.objects.filter(support_contact=current_user)
+
+        last_name = self.request.GET.get("last_name")
+        if last_name is not None and last_name is not "":
+            queryset = queryset.filter(client__last_name__icontains=last_name)
+
+        email = self.request.GET.get("email")
+        if email is not None and email is not "":
+            queryset = queryset.filter(client__email__icontains=email)
+
+        event_date = self.request.GET.get("event_date")
+        if event_date is not None and event_date is not "":
+            date_obj = datetime.strptime(event_date, "%d/%m/%Y")
+            queryset = queryset.filter(event_date__date=date_obj)
+
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
