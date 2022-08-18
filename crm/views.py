@@ -6,13 +6,13 @@ from rest_framework import status
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
-from .permissions import IsSalesContactOrReadOnly, IsSalesOrManagerUser
+from .permissions import IsSalesContactOrReadOnly, IsSalesOrManagerUser, IsStaff
 
 
 class ClientViewset(ModelViewSet):
 
     serializer_class = ClientSerializer
-    permission_classes = [IsAuthenticated, IsSalesContactOrReadOnly]
+    permission_classes = [IsAuthenticated, IsSalesContactOrReadOnly, IsStaff]
 
     def get_queryset(self):
         current_user = self.request.user
@@ -62,7 +62,7 @@ class ContractViewset(ModelViewSet):
 class EventViewset(ModelViewSet):
 
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStaff]
 
     def get_queryset(self):
         current_user = self.request.user

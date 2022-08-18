@@ -23,3 +23,16 @@ class IsSalesOrManagerUser(permissions.BasePermission):
         if request.user.user_type in ("SLS", "MNG"):
             return True
         return False
+
+
+class IsStaff(permissions.BasePermission):
+    message = "Only staff allowed"
+
+    def has_permission(
+        self,
+        request,
+        view,
+    ):
+        if request.user.user_type in ("SLS", "MNG", "SPP"):
+            return True
+        return False

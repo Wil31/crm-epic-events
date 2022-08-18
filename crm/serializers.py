@@ -120,20 +120,20 @@ class EventSerializer(ModelSerializer):
     def create(self, validated_data):
         current_user = self.context.get("request", None).user
         client_email = self.context["request"].POST.get("client", "[]")
-        client_email_obj = Client.objects.get(email=client_email)
+        client_obj = get_object_or_404(Client, email=client_email)
         clients = Client.objects.filter(sales_contact=current_user)
 
-        if client_email_obj not in clients:
+        if client_obj not in clients:
             raise serializers.ValidationError(
                 "Cannot create event for this client. (Wrong sales user)"
             )
 
         User = get_user_model()
         support_email = self.context["request"].POST.get("support_contact", "[]")
-        support_contact_obj = User.objects.get(email=support_email)
+        support_contact_obj = get_object_or_404(User, email=support_email)
 
         event = Event.objects.create(
-            client=client_email_obj,
+            client=client_obj,
             event_status=validated_data["event_status"],
             support_contact=support_contact_obj,
             attendees=validated_data["attendees"],
