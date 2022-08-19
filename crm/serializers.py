@@ -1,4 +1,3 @@
-from xml.dom import ValidationErr
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework.serializers import ModelSerializer
@@ -27,17 +26,13 @@ class ClientSerializer(ModelSerializer):
         ]
 
     def validate(self, data):
-        """Check if user_type is sales"""
-        user = self.context.get("request", None).user
-        if user.user_type != "SLS":
-            error_message = f"Only the Sales user can do this action"
-            raise serializers.ValidationError(error_message)
         """Check if sales_contact is provided"""
         User = get_user_model()
         sales_email = self.context["request"].POST.get("sales_contact", "[]")
         if sales_email == "":
             error_message = f"Sales contact email is required"
             raise serializers.ValidationError(error_message)
+
         """Check if sales_contact is a sales user"""
         sales_contact = get_object_or_404(User, email=sales_email)
         if sales_contact.user_type != "SLS":
@@ -78,7 +73,8 @@ class ContractSerializer(ModelSerializer):
             "date_updated",
         ]
 
-    def create(self, validated_data):
+    def validate(self, attrs):
+        """Check current user is sales contact of client"""
         current_user = self.context.get("request", None).user
         client_email = self.context["request"].POST.get("client", "[]")
         client_obj = get_object_or_404(Client, email=client_email)
@@ -88,7 +84,11 @@ class ContractSerializer(ModelSerializer):
             raise serializers.ValidationError(
                 "Cannot create contract for this client. (Wrong sales user)"
             )
+        return super().validate(attrs)
 
+    def create(self, validated_data):
+        client_email = self.context["request"].POST.get("client", "[]")
+        client_obj = get_object_or_404(Client, email=client_email)
         contract = Contract.objects.create(
             client=client_obj,
             status=validated_data["status"],
@@ -117,7 +117,8 @@ class EventSerializer(ModelSerializer):
             "date_updated",
         ]
 
-    def create(self, validated_data):
+    def validate(self, attrs):
+        """Check current user is sales contact of client"""
         current_user = self.context.get("request", None).user
         client_email = self.context["request"].POST.get("client", "[]")
         client_obj = get_object_or_404(Client, email=client_email)
@@ -127,6 +128,24 @@ class EventSerializer(ModelSerializer):
             raise serializers.ValidationError(
                 "Cannot create event for this client. (Wrong sales user)"
             )
+
+        User = get_user_model()
+        """Check support contact is filled"""
+        support_email = self.context["request"].POST.get("support_contact", "[]")
+        if support_email == "":
+            raise serializers.ValidationError("'Support contact' email required")
+
+        """Check support contact is a support user"""
+        support_contact_obj = get_object_or_404(User, email=support_email)
+        if support_contact_obj.user_type != "SPP":
+            raise serializers.ValidationError(
+                "'Support contact' should by a Support user"
+            )
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        client_email = self.context["request"].POST.get("client", "[]")
+        client_obj = get_object_or_404(Client, email=client_email)
 
         User = get_user_model()
         support_email = self.context["request"].POST.get("support_contact", "[]")

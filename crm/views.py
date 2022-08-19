@@ -6,28 +6,34 @@ from rest_framework import status
 
 from .models import Client, Contract, Event
 from .serializers import ClientSerializer, ContractSerializer, EventSerializer
-from .permissions import IsSalesContactOrReadOnly, IsSalesOrManagerUser, IsStaff
+from .permissions import (
+    IsStaff,
+    IsSalesOrManagerOrReadOnly,
+    IsClientSalesContactOrReadOnly,
+    IsContractSalesContactOrReadOnly,
+    IsSupportContactOrSalesOrReadOnly,
+)
 
 
 class ClientViewset(ModelViewSet):
 
     serializer_class = ClientSerializer
-    permission_classes = [IsAuthenticated, IsSalesContactOrReadOnly, IsStaff]
+    permission_classes = [
+        IsAuthenticated,
+        IsStaff,
+        IsSalesOrManagerOrReadOnly,
+        IsClientSalesContactOrReadOnly,
+    ]
 
     def get_queryset(self):
-        current_user = self.request.user
-        if current_user.user_type == "MNG":
-            queryset = Client.objects.all()
-        elif current_user.user_type == "SLS":
-            queryset = Client.objects.filter(sales_contact=current_user)
-        elif current_user.user_type == "SPP":
-            queryset = Client.objects.filter(
-                event__support_contact=current_user
-            ).distinct()
+        queryset = Client.objects.all()
 
+        """Filter request per client last name"""
         last_name = self.request.GET.get("last_name")
         if last_name is not None and last_name is not "":
             queryset = queryset.filter(last_name__icontains=last_name)
+
+        """Filter request per client email"""
         email = self.request.GET.get("email")
         if email is not None and email is not "":
             queryset = queryset.filter(email__icontains=email)
@@ -45,29 +51,33 @@ class ClientViewset(ModelViewSet):
 class ContractViewset(ModelViewSet):
 
     serializer_class = ContractSerializer
-    permission_classes = [IsAuthenticated, IsSalesOrManagerUser]
+    permission_classes = [
+        IsAuthenticated,
+        IsStaff,
+        IsSalesOrManagerOrReadOnly,
+        IsContractSalesContactOrReadOnly,
+    ]
 
     def get_queryset(self):
-        current_user = self.request.user
-        if current_user.user_type == "MNG":
-            queryset = Contract.objects.all()
-        else:
-            clients = Client.objects.filter(sales_contact=current_user)
-            queryset = Contract.objects.filter(client__in=clients)
+        queryset = Contract.objects.all()
 
+        """Filter request per client last name"""
         last_name = self.request.GET.get("last_name")
         if last_name is not None and last_name is not "":
             queryset = queryset.filter(client__last_name__icontains=last_name)
 
+        """Filter request per client email"""
         email = self.request.GET.get("email")
         if email is not None and email is not "":
             queryset = queryset.filter(client__email__icontains=email)
 
+        """Filter request per contract created date"""
         date_created = self.request.GET.get("date_created")
         if date_created is not None and date_created is not "":
             date_obj = datetime.strptime(date_created, "%d/%m/%Y")
             queryset = queryset.filter(date_created__date=date_obj)
 
+        """Filter request per contract amount"""
         amount = self.request.GET.get("amount")
         if amount is not None and amount is not "":
             queryset = queryset.filter(amount=amount)
@@ -85,25 +95,26 @@ class ContractViewset(ModelViewSet):
 class EventViewset(ModelViewSet):
 
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticated, IsStaff]
+    permission_classes = [
+        IsAuthenticated,
+        IsStaff,
+        IsSupportContactOrSalesOrReadOnly,
+    ]
 
     def get_queryset(self):
-        current_user = self.request.user
-        if current_user.user_type == "MNG":
-            queryset = Event.objects.all()
-        elif current_user.user_type == "SLS":
-            queryset = Event.objects.filter(client__sales_contact=current_user)
-        elif current_user.user_type == "SPP":
-            queryset = Event.objects.filter(support_contact=current_user)
+        queryset = Event.objects.all()
 
+        """Filter request per client last name"""
         last_name = self.request.GET.get("last_name")
         if last_name is not None and last_name is not "":
             queryset = queryset.filter(client__last_name__icontains=last_name)
 
+        """Filter request per client email"""
         email = self.request.GET.get("email")
         if email is not None and email is not "":
             queryset = queryset.filter(client__email__icontains=email)
 
+        """Filter request per event date"""
         event_date = self.request.GET.get("event_date")
         if event_date is not None and event_date is not "":
             date_obj = datetime.strptime(event_date, "%d/%m/%Y")
