@@ -2,9 +2,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
 from .serializers import SignupSerializer
 from .permissions import IsManager
+from .models import CustomUser
 
 
 class SignupViewset(ModelViewSet):
@@ -27,3 +29,15 @@ class SignupViewset(ModelViewSet):
         else:
             data = serializer.errors
         return Response(data)
+
+    def get_queryset(self):
+        queryset = CustomUser.objects.all()
+        return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {"message": f"User '{instance}' deleted successfully."},
+            status=status.HTTP_200_OK,
+        )

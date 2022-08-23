@@ -8,19 +8,31 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ["email", "user_type", "password", "password2"]
+        fields = ["id", "email", "user_type", "password", "password2"]
         extra_kwargs = {"password": {"write_only": True}}
 
-    def save(self, **kwargs):
+    def create(self, validated_data):
         user = CustomUser(
-            email=self.validated_data["email"],
-            user_type=self.validated_data["user_type"],
+            email=validated_data["email"],
+            user_type=validated_data["user_type"],
         )
-        password = self.validated_data["password"]
-        password2 = self.validated_data["password2"]
+        password = validated_data["password"]
+        password2 = validated_data["password2"]
 
         if password != password2:
             raise serializers.ValidationError({"password": "Passwords must match."})
         user.set_password(password)
         user.save()
-        return CustomUser
+        return user
+
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get("email", instance.email)
+        instance.user_type = validated_data.get("user_type", instance.user_type)
+        password = validated_data["password"]
+        password2 = validated_data["password2"]
+
+        if password != password2:
+            raise serializers.ValidationError({"password": "Passwords must match."})
+        instance.set_password(password)
+        instance.save()
+        return instance
