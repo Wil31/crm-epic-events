@@ -34,7 +34,13 @@ class ClientSerializer(ModelSerializer):
             raise serializers.ValidationError(error_message)
 
         """Check if sales_contact is a sales user"""
-        sales_contact = get_object_or_404(User, email=sales_email)
+        try:
+            sales_contact = User.objects.get(email=sales_email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                "Sales contact email unknown (check typo)"
+            )
+
         if sales_contact.user_type != "SLS":
             error_message = "'Sales email' should be a sales user"
             raise serializers.ValidationError(error_message)
@@ -77,7 +83,11 @@ class ContractSerializer(ModelSerializer):
         """Check current user is sales contact of client"""
         current_user = self.context.get("request", None).user
         client_email = self.context["request"].POST.get("client", "[]")
-        client_obj = get_object_or_404(Client, email=client_email)
+        try:
+            client_obj = Client.objects.get(email=client_email)
+        except Client.DoesNotExist:
+            raise serializers.ValidationError("Client email unknown (check typo)")
+
         clients = Client.objects.filter(sales_contact=current_user)
 
         if client_obj not in clients:
@@ -121,7 +131,10 @@ class EventSerializer(ModelSerializer):
         """Check current user is sales contact of client"""
         current_user = self.context.get("request", None).user
         client_email = self.context["request"].POST.get("client", "[]")
-        client_obj = get_object_or_404(Client, email=client_email)
+        try:
+            client_obj = Client.objects.get(email=client_email)
+        except Client.DoesNotExist:
+            raise serializers.ValidationError("Client email unknown (check typo)")
         clients = Client.objects.filter(sales_contact=current_user)
 
         if client_obj not in clients:
@@ -136,7 +149,12 @@ class EventSerializer(ModelSerializer):
             raise serializers.ValidationError("'Support contact' email required")
 
         """Check support contact is a support user"""
-        support_contact_obj = get_object_or_404(User, email=support_email)
+        try:
+            support_contact_obj = User.objects.get(email=support_email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                "Support contact email unknown (check typo)"
+            )
         if support_contact_obj.user_type != "SPP":
             raise serializers.ValidationError(
                 "'Support contact' should by a Support user"

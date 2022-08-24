@@ -29,7 +29,7 @@ class Contract(models.Model):
     client = models.ForeignKey(
         to=Client, on_delete=models.PROTECT, related_name="client_contract"
     )
-    status = models.BooleanField(default=True)
+    status = models.BooleanField(default=False)
     amount = models.FloatField(validators=[MinValueValidator(0)], null=True, blank=True)
     payment_due = models.DateTimeField(null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
