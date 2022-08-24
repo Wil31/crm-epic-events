@@ -30,12 +30,12 @@ class ClientViewset(ModelViewSet):
 
         """Filter request per client last name"""
         last_name = self.request.GET.get("last_name")
-        if last_name is not None and last_name is not "":
+        if last_name is not None and last_name != "":
             queryset = queryset.filter(last_name__icontains=last_name)
 
         """Filter request per client email"""
         email = self.request.GET.get("email")
-        if email is not None and email is not "":
+        if email is not None and email != "":
             queryset = queryset.filter(email__icontains=email)
         return queryset
 
@@ -63,23 +63,23 @@ class ContractViewset(ModelViewSet):
 
         """Filter request per client last name"""
         last_name = self.request.GET.get("last_name")
-        if last_name is not None and last_name is not "":
+        if last_name is not None and last_name != "":
             queryset = queryset.filter(client__last_name__icontains=last_name)
 
         """Filter request per client email"""
         email = self.request.GET.get("email")
-        if email is not None and email is not "":
+        if email is not None and email != "":
             queryset = queryset.filter(client__email__icontains=email)
 
         """Filter request per contract created date"""
         date_created = self.request.GET.get("date_created")
-        if date_created is not None and date_created is not "":
+        if date_created is not None and date_created != "":
             date_obj = datetime.strptime(date_created, "%d/%m/%Y")
             queryset = queryset.filter(date_created__date=date_obj)
 
         """Filter request per contract amount"""
         amount = self.request.GET.get("amount")
-        if amount is not None and amount is not "":
+        if amount is not None and amount != "":
             queryset = queryset.filter(amount=amount)
         return queryset
 
@@ -106,17 +106,17 @@ class EventViewset(ModelViewSet):
 
         """Filter request per client last name"""
         last_name = self.request.GET.get("last_name")
-        if last_name is not None and last_name is not "":
+        if last_name is not None and last_name != "":
             queryset = queryset.filter(client__last_name__icontains=last_name)
 
         """Filter request per client email"""
         email = self.request.GET.get("email")
-        if email is not None and email is not "":
+        if email is not None and email != "":
             queryset = queryset.filter(client__email__icontains=email)
 
         """Filter request per event date"""
         event_date = self.request.GET.get("event_date")
-        if event_date is not None and event_date is not "":
+        if event_date is not None and event_date != "":
             date_obj = datetime.strptime(event_date, "%d/%m/%Y")
             queryset = queryset.filter(event_date__date=date_obj)
 

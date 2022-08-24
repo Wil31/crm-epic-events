@@ -30,13 +30,13 @@ class ClientSerializer(ModelSerializer):
         User = get_user_model()
         sales_email = self.context["request"].POST.get("sales_contact", "[]")
         if sales_email == "":
-            error_message = f"Sales contact email is required"
+            error_message = "Sales contact email is required"
             raise serializers.ValidationError(error_message)
 
         """Check if sales_contact is a sales user"""
         sales_contact = get_object_or_404(User, email=sales_email)
         if sales_contact.user_type != "SLS":
-            error_message = f"'Sales email' should be a sales user"
+            error_message = "'Sales email' should be a sales user"
             raise serializers.ValidationError(error_message)
         return super().validate(data)
 
