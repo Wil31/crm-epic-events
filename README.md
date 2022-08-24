@@ -1,8 +1,14 @@
 [![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com)
 
 # CRM-EPIC-Events
-Logiciel gestion de la relation client (CRM) de l'entreprise, qui effectue le suivi de tous les clients et événements.  
-Projet 12 OC.
+Logiciel gestion de la relation client (CRM) de l'entreprise, qui effectue le suivi de tous les clients et événements.
+
+Contraintes du projet :
+* Elaborer une architecture de base de données relationnelle
+* Utiliser PostreSQL et Django ORM pour mettre en place une base de données sécurisée
+* Empêcher les injections SQL
+* Garantir l'authentification par token
+* Gérer les permissions d'accès aux données selon le type d'utilisateur
 
 ## Utilisation
 
